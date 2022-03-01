@@ -1,16 +1,51 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Laboratory2.Models;
+using Newtonsoft.Json;
 
 namespace Laboratory2.Repositories
 {
     public class TeachersRepositoryImpl : ITeachersRepository
     {
 
-        private List<Teacher> _teachers = new List<Teacher>();
+        private const string FileName = "teacher.json";
+
+        private static TeachersRepositoryImpl _instance;
+
+        [JsonProperty] private List<Teacher> _teachers = new List<Teacher>();
         
-        private int _nextTeacherId = 10;
+        [JsonProperty] private int _nextTeacherId;
         private int NextTeacherId => _nextTeacherId++;
+
+        public static ITeachersRepository GetInstance()
+        {
+            if (_instance != null) return _instance;
+            if (!File.Exists(FileName))
+            {
+                _instance = new TeachersRepositoryImpl();
+            }
+            else
+            {
+                var jsonText = File.ReadAllText(FileName);
+                try
+                {
+                    _instance = JsonConvert.DeserializeObject<TeachersRepositoryImpl>(jsonText);
+                }
+                catch (Exception)
+                {
+                    _instance = new TeachersRepositoryImpl();
+                }
+            }
+            return _instance;
+        }
+        
+        public static void SaveInstance()
+        {
+            var jsonText = JsonConvert.SerializeObject(_instance);
+            File.WriteAllText(FileName, jsonText);
+        }
         
         public void AddOrUpdate(Teacher teacher)
         {
