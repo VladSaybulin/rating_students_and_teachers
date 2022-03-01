@@ -2,8 +2,20 @@
 {
     public class SubjectGrade
     {
-        public int SubjectId { get; set; }
-        public int Grade { get; set; }
+
+        private int _grade;
+        
+        public int SubjectId { get; }
+
+        public int Grade
+        {
+            get => _grade;
+            set
+            {
+                if (value < 0 || value > 100) return;
+                _grade = value;
+            }
+        }
 
         public SubjectGrade(int subjectId, int grade)
         {
