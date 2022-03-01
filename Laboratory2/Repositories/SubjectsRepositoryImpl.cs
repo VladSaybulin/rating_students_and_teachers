@@ -1,17 +1,51 @@
-﻿using System.Collections.Generic;
-using System.Runtime.InteropServices;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
 using Laboratory2.Models;
+using Newtonsoft.Json;
 
 namespace Laboratory2.Repositories
 {
     public class SubjectsRepositoryImpl : ISubjectsRepository
     {
-        private List<Subject> _subjects = new List<Subject>();
+        private const string FileName = "subjects.json";
+
+        private static SubjectsRepositoryImpl _instance;
+
+        [JsonProperty] private List<Subject> _subjects = new List<Subject>();
         
-        private int _nextSubjectId = 10;
+        [JsonProperty] private int _nextSubjectId;
         private int NextSubjectId => _nextSubjectId++;
-        
-        
+
+        public static ISubjectsRepository GetInstance()
+        {
+            if (_instance != null) return _instance;
+            if (!File.Exists(FileName))
+            {
+                _instance = new SubjectsRepositoryImpl();
+            }
+            else
+            {
+                var jsonText = File.ReadAllText(FileName);
+                try
+                {
+                    _instance = JsonConvert.DeserializeObject<SubjectsRepositoryImpl>(jsonText);
+                }
+                catch (Exception)
+                {
+                    _instance = new SubjectsRepositoryImpl();
+                }
+            }
+            return _instance;
+        }
+
+        public static void SaveInstance()
+        {
+            var jsonText = JsonConvert.SerializeObject(_instance);
+            File.WriteAllText(FileName, jsonText);
+        }
+
         public void AddOrUpdate(Subject subject)
         {
             var index = _subjects.FindIndex(subjectItem => subjectItem.Id == subject.Id);
